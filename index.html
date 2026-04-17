@@ -253,22 +253,91 @@ document.getElementById("output").value = text;
 }
 // ===== SAVE =====
 async function saveOnline(){
-let data={};
-document.querySelectorAll("input").forEach(i=>data[i.id]=i.value);
-await supabaseClient.from("laporan").upsert([{id:1,data}]);
-alert("Tersimpan!");
+
+  const data = {
+    inputs: {},
+    pengeluaran1: [],
+    pengeluaran2: []
+  };
+
+  // input biasa
+  document.querySelectorAll("input").forEach(i=>{
+    data.inputs[i.id] = i.value;
+  });
+
+  // pengeluaran shift 1
+  document.querySelectorAll("#pengeluaran1 div").forEach(el=>{
+    data.pengeluaran1.push({
+      nama: el.children[0].value,
+      harga: el.children[1].value
+    });
+  });
+
+  // pengeluaran shift 2
+  document.querySelectorAll("#pengeluaran2 div").forEach(el=>{
+    data.pengeluaran2.push({
+      nama: el.children[0].value,
+      harga: el.children[1].value
+    });
+  });
+
+  const { error } = await supabaseClient
+    .from("laporan")
+    .upsert([{ id: 1, data }]);
+
+  if(error){
+    alert("ERROR: "+error.message);
+  }else{
+    alert("Tersimpan!");
+  }
 }
 
 // ===== LOAD =====
 async function loadOnline(){
-let {data}=await supabaseClient.from("laporan").select("*").eq("id",1).single();
-if(!data)return alert("Belum ada data");
-Object.keys(data.data).forEach(id=>{
-if(document.getElementById(id)){
-document.getElementById(id).value=data.data[id];
-}
-});
-alert("Loaded!");
+
+  const { data, error } = await supabaseClient
+    .from("laporan")
+    .select("*")
+    .eq("id",1)
+    .single();
+
+  if(error || !data){
+    alert("Belum ada data");
+    return;
+  }
+
+  let d = data.data;
+
+  // input biasa
+  Object.keys(d.inputs).forEach(id=>{
+    if(document.getElementById(id)){
+      document.getElementById(id).value = d.inputs[id];
+    }
+  });
+
+  // reset dulu
+  document.getElementById("pengeluaran1").innerHTML = "";
+  document.getElementById("pengeluaran2").innerHTML = "";
+
+  // isi ulang shift 1
+  d.pengeluaran1.forEach(item=>{
+    tambah("pengeluaran1");
+    let el = document.querySelectorAll("#pengeluaran1 div");
+    el = el[el.length-1];
+    el.children[0].value = item.nama;
+    el.children[1].value = item.harga;
+  });
+
+  // isi ulang shift 2
+  d.pengeluaran2.forEach(item=>{
+    tambah("pengeluaran2");
+    let el = document.querySelectorAll("#pengeluaran2 div");
+    el = el[el.length-1];
+    el.children[0].value = item.nama;
+    el.children[1].value = item.harga;
+  });
+
+  alert("Loaded!");
 }
 
 </script>
