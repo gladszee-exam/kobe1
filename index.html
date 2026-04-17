@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Bubur</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-gray-100 p-4">
+<div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
+
+<h1 class="text-xl font-bold mb-4">Laporan Bubur Ayam</h1>
+
+<input id="tanggal" placeholder="Tanggal" class="input">
+
+<h2>SHIFT 1</h2>
+<input id="s1_offline" placeholder="Offline" class="input">
+<input id="s1_gojek" placeholder="Gojek" class="input">
+<input id="s1_grab" placeholder="Grab" class="input">
+<input id="s1_shopee" placeholder="Shopee" class="input">
+
+<h2 class="mt-4">SHIFT 2</h2>
+<input id="s2_offline" placeholder="Offline" class="input">
+<input id="s2_gojek" placeholder="Gojek" class="input">
+<input id="s2_grab" placeholder="Grab" class="input">
+<input id="s2_shopee" placeholder="Shopee" class="input">
+
+<h2 class="mt-4">Penjualan</h2>
+<input id="jual1" placeholder="Shift 1" class="input">
+<input id="jual2" placeholder="Shift 2" class="input">
+
+<h2 class="mt-4">QRIS</h2>
+<input id="qris1" placeholder="Shift 1" class="input">
+<input id="qris2" placeholder="Shift 2" class="input">
+
+<h2 class="mt-4">Pengeluaran Shift 1</h2>
+<div id="pengeluaran1"></div>
+<button id="btnTambah1" class="btn">+ Tambah</button>
+
+<h2 class="mt-4">Pengeluaran Shift 2</h2>
+<div id="pengeluaran2"></div>
+<button id="btnTambah2" class="btn">+ Tambah</button>
+
+<h2 class="mt-4">Stok</h2>
+<input id="ayam" placeholder="Ayam (kg)" class="input">
+<input id="beras" placeholder="Beras (kg)" class="input">
+
+<h2 class="mt-4">Sisa</h2>
+<input id="sisa1" placeholder="Shift 1" class="input">
+<input id="sisa2" placeholder="Shift 2" class="input">
+
+<div class="grid grid-cols-2 gap-2 mt-4">
+<button onclick="generate('s1')" class="bg-yellow-500 text-white p-2 rounded">Shift 1</button>
+<button onclick="generate('full')" class="bg-green-600 text-white p-2 rounded">Full</button>
+</div>
+
+<button onclick="saveOnline()" class="bg-green-700 text-white p-2 rounded mt-2 w-full">Save Online</button>
+<button onclick="loadOnline()" class="bg-blue-700 text-white p-2 rounded mt-2 w-full">Load Online</button>
+
+<textarea id="output" class="w-full border mt-4 p-2 h-64"></textarea>
+
+</div>
+
+<style>
+.input{width:100%;border:1px solid #ccc;padding:8px;margin-top:5px;border-radius:8px}
+.btn{background:#3b82f6;color:white;padding:6px;border-radius:6px;margin-top:6px}
+</style>
+
+<script>
+
+// ===== SUPABASE CONFIG =====
+const supabase = window.supabase.createClient(
+  "https://ngrdwetkqwbsxgqmvyoy.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+);
+
+// ===== TAMBAH INPUT =====
+function tambah(id){
+  let div=document.createElement('div');
+  div.className='flex gap-2 mt-2';
+  div.innerHTML=`<input placeholder="Nama" class="w-1/2 border p-2">
+                 <input type="number" placeholder="Harga" class="w-1/2 border p-2">`;
+  document.getElementById(id).appendChild(div);
+}
+
+document.getElementById('btnTambah1').onclick=()=>tambah('pengeluaran1');
+document.getElementById('btnTambah2').onclick=()=>tambah('pengeluaran2');
+
+// ===== HITUNG =====
+function sum(id){return parseInt(document.getElementById(id).value)||0}
+function rupiah(n){return n.toLocaleString('id-ID')}
+
+// ===== GENERATE =====
+function generate(mode){
+  let totalOffline=sum('jual1')+(mode==='full'?sum('jual2'):0);
+  let totalQris=sum('qris1')+(mode==='full'?sum('qris2'):0);
+
+  let text=`*LAPORAN*\\nOffline: ${rupiah(totalOffline)}\\nQris: ${rupiah(totalQris)}`;
+
+  document.getElementById('output').value=text;
+}
+
+// ===== SAVE ONLINE =====
+async function saveOnline(){
+  const data = {};
+  document.querySelectorAll('input').forEach(i=>data[i.id]=i.value);
+
+  await supabase.from('laporan').upsert([{id:1,data:data}]);
+  alert("Tersimpan online!");
+}
+
+// ===== LOAD ONLINE =====
+async function loadOnline(){
+  const { data } = await supabase.from('laporan').select('*').eq('id',1).single();
+  if(!data){alert("Belum ada data");return;}
+
+  Object.keys(data.data).forEach(id=>{
+    if(document.getElementById(id)){
+      document.getElementById(id).value=data.data[id];
+    }
+  });
+
+  alert("Data berhasil di load!");
+}
+
+</script>
+
+</body>
+</html>
