@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Laporan Bubur</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -37,11 +38,11 @@
 
 <h2 class="mt-4">Pengeluaran Shift 1</h2>
 <div id="pengeluaran1"></div>
-<button id="btnTambah1" class="btn">+ Tambah</button>
+<button type="button" id="btnTambah1" class="btn">+ Tambah</button>
 
 <h2 class="mt-4">Pengeluaran Shift 2</h2>
 <div id="pengeluaran2"></div>
-<button id="btnTambah2" class="btn">+ Tambah</button>
+<button type="button" id="btnTambah2" class="btn">+ Tambah</button>
 
 <h2 class="mt-4">Stok</h2>
 <input id="ayam" placeholder="Ayam (kg)" class="input">
@@ -69,52 +70,58 @@
 </style>
 
 <script>
-
-// ===== SUPABASE CONFIG =====
-const supabase = window.supabase.createClient(
+// ✅ SUPABASE FIX
+const supabaseClient = window.supabase.createClient(
   "https://ngrdwetkqwbsxgqmvyoy.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmR3ZXRrcXdic3hncW12eW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTU2NzIsImV4cCI6MjA5MTgzMTY3Mn0.mCtXaje5VTIdjJ_PG0gwOoKs2PsVxUGYjH5uKFOXouU"
 );
 
-// ===== TAMBAH INPUT =====
+// ✅ TAMBAH INPUT (FIX EVENT)
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnTambah1").addEventListener("click", () => tambah("pengeluaran1"));
+  document.getElementById("btnTambah2").addEventListener("click", () => tambah("pengeluaran2"));
+});
+
 function tambah(id){
   let div=document.createElement('div');
   div.className='flex gap-2 mt-2';
-  div.innerHTML=`<input placeholder="Nama" class="w-1/2 border p-2">
-                 <input type="number" placeholder="Harga" class="w-1/2 border p-2">`;
+  div.innerHTML=`
+    <input placeholder="Nama" class="w-1/2 border p-2 rounded">
+    <input type="number" placeholder="Harga" class="w-1/2 border p-2 rounded">
+  `;
   document.getElementById(id).appendChild(div);
 }
 
-document.getElementById('btnTambah1').onclick=()=>tambah('pengeluaran1');
-document.getElementById('btnTambah2').onclick=()=>tambah('pengeluaran2');
-
-// ===== HITUNG =====
+// ✅ HITUNG
 function sum(id){return parseInt(document.getElementById(id).value)||0}
 function rupiah(n){return n.toLocaleString('id-ID')}
 
-// ===== GENERATE =====
+// ✅ GENERATE
 function generate(mode){
   let totalOffline=sum('jual1')+(mode==='full'?sum('jual2'):0);
   let totalQris=sum('qris1')+(mode==='full'?sum('qris2'):0);
 
-  let text=`*LAPORAN*\\nOffline: ${rupiah(totalOffline)}\\nQris: ${rupiah(totalQris)}`;
-
+  let text=`LAPORAN\nOffline: ${rupiah(totalOffline)}\nQris: ${rupiah(totalQris)}`;
   document.getElementById('output').value=text;
 }
 
-// ===== SAVE ONLINE =====
+// ✅ SAVE ONLINE
 async function saveOnline(){
   const data = {};
   document.querySelectorAll('input').forEach(i=>data[i.id]=i.value);
 
-  await supabase.from('laporan').upsert([{id:1,data:data}]);
+  await supabaseClient.from('laporan').upsert([{id:1,data:data}]);
   alert("Tersimpan online!");
 }
 
-// ===== LOAD ONLINE =====
+// ✅ LOAD ONLINE
 async function loadOnline(){
-  const { data } = await supabase.from('laporan').select('*').eq('id',1).single();
-  if(!data){alert("Belum ada data");return;}
+  const { data } = await supabaseClient.from('laporan').select('*').eq('id',1).single();
+
+  if(!data){
+    alert("Belum ada data");
+    return;
+  }
 
   Object.keys(data.data).forEach(id=>{
     if(document.getElementById(id)){
@@ -124,7 +131,6 @@ async function loadOnline(){
 
   alert("Data berhasil di load!");
 }
-
 </script>
 
 </body>
