@@ -166,12 +166,13 @@ function ambil(id){
 let p1 = ambil("pengeluaran1");
 let p2 = ambil("pengeluaran2");
 
-// ===== TOTAL =====
+// ===== LOGIC UANG (INI YANG BENER) =====
 let totalOffline = jual1 + (mode==='full'?jual2:0);
-let totalQris = q1 + (mode==='full'?q2:0);
 let totalPengeluaran = p1.total + (mode==='full'?p2.total:0);
-let uang = totalOffline - totalPengeluaran;
-let totalSisa = sisa1 + (mode==='full'?sisa2:0);
+let totalQris = q1 + (mode==='full'?q2:0);
+
+let totalTransfer = totalOffline - totalPengeluaran;
+let sisaUang = totalTransfer - totalQris;
 
 // ===== OUTPUT =====
 let text = 
@@ -246,7 +247,7 @@ text += `
 *SISA BUBUR*
 Shift 1 = ${sisa1} Porsi
 ${mode==='full'?`Shift 2 = ${sisa2} Porsi\n`:''}
-*Total Sisa = ${totalSisa} Porsi*
+*Total Sisa = ${sisa1 + (mode==='full'?sisa2:0)} Porsi*
 `;
 
 document.getElementById("output").value = text;
