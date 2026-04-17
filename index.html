@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Bubur</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Bubur</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body class="bg-gray-100 p-4">
@@ -28,7 +28,7 @@
 <input id="s2_grab" placeholder="Grab" class="input">
 <input id="s2_shopee" placeholder="Shopee" class="input">
 
-<h2 class="mt-4">Penjualan</h2>
+<h2 class="mt-4">Penjualan Offline</h2>
 <input id="jual1" placeholder="Shift 1" class="input">
 <input id="jual2" placeholder="Shift 2" class="input">
 
@@ -48,7 +48,7 @@
 <input id="ayam" placeholder="Ayam (kg)" class="input">
 <input id="beras" placeholder="Beras (kg)" class="input">
 
-<h2 class="mt-4">Sisa</h2>
+<h2 class="mt-4">Sisa Bubur</h2>
 <input id="sisa1" placeholder="Shift 1" class="input">
 <input id="sisa2" placeholder="Shift 2" class="input">
 
@@ -60,7 +60,7 @@
 <button onclick="saveOnline()" class="bg-green-700 text-white p-2 rounded mt-2 w-full">Save Online</button>
 <button onclick="loadOnline()" class="bg-blue-700 text-white p-2 rounded mt-2 w-full">Load Online</button>
 
-<textarea id="output" class="w-full border mt-4 p-2 h-64"></textarea>
+<textarea id="output" class="w-full border mt-4 p-2 h-72"></textarea>
 
 </div>
 
@@ -70,16 +70,16 @@
 </style>
 
 <script>
-// ✅ SUPABASE FIX
+// ===== SUPABASE =====
 const supabaseClient = window.supabase.createClient(
-  "https://ngrdwetkqwbsxgqmvyoy.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmR3ZXRrcXdic3hncW12eW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTU2NzIsImV4cCI6MjA5MTgzMTY3Mn0.mCtXaje5VTIdjJ_PG0gwOoKs2PsVxUGYjH5uKFOXouU"
+"https://ngrdwetkqwbsxgqmvyoy.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ncmR3ZXRrcXdic3hncW12eW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTU2NzIsImV4cCI6MjA5MTgzMTY3Mn0.mCtXaje5VTIdjJ_PG0gwOoKs2PsVxUGYjH5uKFOXouU"
 );
 
-// ✅ TAMBAH INPUT (FIX EVENT)
+// ===== TAMBAH INPUT =====
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnTambah1").addEventListener("click", () => tambah("pengeluaran1"));
-  document.getElementById("btnTambah2").addEventListener("click", () => tambah("pengeluaran2"));
+  btnTambah1.onclick=()=>tambah('pengeluaran1');
+  btnTambah2.onclick=()=>tambah('pengeluaran2');
 });
 
 function tambah(id){
@@ -92,46 +92,134 @@ function tambah(id){
   document.getElementById(id).appendChild(div);
 }
 
-// ✅ HITUNG
+// ===== HELPER =====
 function sum(id){return parseInt(document.getElementById(id).value)||0}
-function rupiah(n){return n.toLocaleString('id-ID')}
+function rp(n){return n.toLocaleString('id-ID')}
 
-// ✅ GENERATE
-function generate(mode){
-  let totalOffline=sum('jual1')+(mode==='full'?sum('jual2'):0);
-  let totalQris=sum('qris1')+(mode==='full'?sum('qris2'):0);
-
-  let text=`LAPORAN\nOffline: ${rupiah(totalOffline)}\nQris: ${rupiah(totalQris)}`;
-  document.getElementById('output').value=text;
-}
-
-// ✅ SAVE ONLINE
-async function saveOnline(){
-  const data = {};
-  document.querySelectorAll('input').forEach(i=>data[i.id]=i.value);
-
-  await supabaseClient.from('laporan').upsert([{id:1,data:data}]);
-  alert("Tersimpan online!");
-}
-
-// ✅ LOAD ONLINE
-async function loadOnline(){
-  const { data } = await supabaseClient.from('laporan').select('*').eq('id',1).single();
-
-  if(!data){
-    alert("Belum ada data");
-    return;
-  }
-
-  Object.keys(data.data).forEach(id=>{
-    if(document.getElementById(id)){
-      document.getElementById(id).value=data.data[id];
+// ===== AMBIL PENGELUARAN =====
+function getPengeluaran(id){
+  let total=0,text="";
+  document.querySelectorAll("#"+id+" div").forEach(el=>{
+    let n=el.children[0].value;
+    let h=parseInt(el.children[1].value)||0;
+    if(n){
+      text+=`- ${n} = ${rp(h)}\n`;
+      total+=h;
     }
   });
-
-  alert("Data berhasil di load!");
+  return {total,text};
 }
-</script>
 
+// ===== GENERATE =====
+function generate(mode){
+
+let t=document.getElementById("tanggal").value;
+
+let s1=sum("s1_offline")+sum("s1_gojek")+sum("s1_grab")+sum("s1_shopee");
+let s2=sum("s2_offline")+sum("s2_gojek")+sum("s2_grab")+sum("s2_shopee");
+
+let jual1=sum("jual1");
+let jual2=sum("jual2");
+
+let q1=sum("qris1");
+let q2=sum("qris2");
+
+let ayam=document.getElementById("ayam").value||0;
+let beras=document.getElementById("beras").value||0;
+
+let sisa1=sum("sisa1");
+let sisa2=sum("sisa2");
+
+let p1=getPengeluaran("pengeluaran1");
+let p2=getPengeluaran("pengeluaran2");
+
+let totalOffline=jual1+(mode==='full'?jual2:0);
+let totalQris=q1+(mode==='full'?q2:0);
+let totalPengeluaran=p1.total+(mode==='full'?p2.total:0);
+
+let uang=totalOffline-totalPengeluaran;
+
+let text=`*SHIFT ${mode==='s1'?'1':'2'}*
+*LAPORAN HARIAN*
+*BUBUR AYAM KOBE*
+*${t}*
+
+*SHIFT 1*
+Total = ${s1}
+
+`;
+
+if(mode==='full'){
+text+=`*SHIFT 2*
+Total = ${s2}
+
+*Total Semua = ${s1+s2}*
+
+`;
+}
+
+text+=`*(+) Penjualan Offline*
+Shift 1 = ${rp(jual1)}
+${mode==='full'?`Shift 2 = ${rp(jual2)}\n`:''}
+*Total = ${rp(totalOffline)}*
+
+*QRIS*
+Shift 1 = ${rp(q1)}
+${mode==='full'?`Shift 2 = ${rp(q2)}\n`:''}
+*Total = ${rp(totalQris)}*
+
+*(+) Pengeluaran*
+Ayam = ${ayam} Kg
+Beras = ${beras} Kg
+
+*(-) Pengeluaran Shift 1*
+${p1.text}
+*Total = ${rp(p1.total)}*
+
+`;
+
+if(mode==='full'){
+text+=`*(-) Pengeluaran Shift 2*
+${p2.text}
+*Total = ${rp(p2.total)}*
+
+`;
+}
+
+text+=`*TOTAL PENGELUARAN = ${rp(totalPengeluaran)}*
+
+*(-) Uang Belanja*
+${rp(uang)}
+
+*SISA BUBUR*
+Shift 1 = ${sisa1}
+${mode==='full'?`Shift 2 = ${sisa2}\n`:''}
+*Total = ${sisa1+(mode==='full'?sisa2:0)}*
+`;
+
+document.getElementById("output").value=text;
+}
+
+// ===== SAVE =====
+async function saveOnline(){
+let data={};
+document.querySelectorAll("input").forEach(i=>data[i.id]=i.value);
+await supabaseClient.from("laporan").upsert([{id:1,data}]);
+alert("Tersimpan!");
+}
+
+// ===== LOAD =====
+async function loadOnline(){
+let {data}=await supabaseClient.from("laporan").select("*").eq("id",1).single();
+if(!data)return alert("Belum ada data");
+Object.keys(data.data).forEach(id=>{
+if(document.getElementById(id)){
+document.getElementById(id).value=data.data[id];
+}
+});
+alert("Loaded!");
+}
+
+</script>
 </body>
 </html>
