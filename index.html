@@ -113,93 +113,144 @@ function getPengeluaran(id){
 // ===== GENERATE =====
 function generate(mode){
 
-let t=document.getElementById("tanggal").value;
+let tanggal = document.getElementById("tanggal").value;
 
-let s1=sum("s1_offline")+sum("s1_gojek")+sum("s1_grab")+sum("s1_shopee");
-let s2=sum("s2_offline")+sum("s2_gojek")+sum("s2_grab")+sum("s2_shopee");
+// ===== SHIFT 1 =====
+let s1_off = sum("s1_offline");
+let s1_go = sum("s1_gojek");
+let s1_gr = sum("s1_grab");
+let s1_sh = sum("s1_shopee");
+let total1 = s1_off + s1_go + s1_gr + s1_sh;
 
-let jual1=sum("jual1");
-let jual2=sum("jual2");
+// ===== SHIFT 2 =====
+let s2_off = sum("s2_offline");
+let s2_go = sum("s2_gojek");
+let s2_gr = sum("s2_grab");
+let s2_sh = sum("s2_shopee");
+let total2 = s2_off + s2_go + s2_gr + s2_sh;
 
-let q1=sum("qris1");
-let q2=sum("qris2");
+// ===== PENJUALAN =====
+let jual1 = sum("jual1");
+let jual2 = sum("jual2");
 
-let ayam=document.getElementById("ayam").value||0;
-let beras=document.getElementById("beras").value||0;
+// ===== QRIS =====
+let q1 = sum("qris1");
+let q2 = sum("qris2");
 
-let sisa1=sum("sisa1");
-let sisa2=sum("sisa2");
+// ===== STOK =====
+let ayam = document.getElementById("ayam").value || 0;
+let beras = document.getElementById("beras").value || 0;
 
-let p1=getPengeluaran("pengeluaran1");
-let p2=getPengeluaran("pengeluaran2");
+// ===== SISA =====
+let sisa1 = sum("sisa1");
+let sisa2 = sum("sisa2");
 
-let totalOffline=jual1+(mode==='full'?jual2:0);
-let totalQris=q1+(mode==='full'?q2:0);
-let totalPengeluaran=p1.total+(mode==='full'?p2.total:0);
+// ===== PENGELUARAN =====
+function ambil(id){
+  let total = 0;
+  let text = "";
 
-let uang=totalOffline-totalPengeluaran;
+  document.querySelectorAll("#"+id+" div").forEach(el=>{
+    let nama = el.children[0].value;
+    let harga = parseInt(el.children[1].value)||0;
 
-let text=`*SHIFT ${mode==='s1'?'1':'2'}*
+    if(nama){
+      text += `- ${nama} = ${rp(harga)}\n`;
+      total += harga;
+    }
+  });
+
+  return {text,total};
+}
+
+let p1 = ambil("pengeluaran1");
+let p2 = ambil("pengeluaran2");
+
+// ===== TOTAL =====
+let totalOffline = jual1 + (mode==='full'?jual2:0);
+let totalQris = q1 + (mode==='full'?q2:0);
+let totalPengeluaran = p1.total + (mode==='full'?p2.total:0);
+let uang = totalOffline - totalPengeluaran;
+let totalSisa = sisa1 + (mode==='full'?sisa2:0);
+
+// ===== OUTPUT =====
+let text = 
+`*SHIFT ${mode==='s1'?'1':'2'}*
 *LAPORAN HARIAN*
 *BUBUR AYAM KOBE*
-*${t}*
+*${tanggal}*
 
 *SHIFT 1*
-Total = ${s1}
+Offline = ${s1_off} Porsi
+Gojeg = ${s1_go} Porsi
+Grab = ${s1_gr} Porsi
+Shopee = ${s1_sh} Porsi
+*Total Porsi Terjual = ${total1} Porsi*
+--------------------------------------------------------------------------------------------`;
 
-`;
+if(mode === 'full'){
+text += `
+*SHIFT 2*
+Offline = ${s2_off} Porsi
+Gojeg = ${s2_go} Porsi
+Grab = ${s2_gr} Porsi
+Shopee = ${s2_sh} Porsi
+*Total Porsi Terjual = ${total2} Porsi*
 
-if(mode==='full'){
-text+=`*SHIFT 2*
-Total = ${s2}
-
-*Total Semua = ${s1+s2}*
-
-`;
+*Total Porsi Terjual Shift 1 & 2 = ${total1+total2} Porsi*
+-------------------------------------
+------------------------------------------------------`;
 }
 
-text+=`*(+) Penjualan Offline*
-Shift 1 = ${rp(jual1)}
-${mode==='full'?`Shift 2 = ${rp(jual2)}\n`:''}
-*Total = ${rp(totalOffline)}*
+text += `
 
-*QRIS*
-Shift 1 = ${rp(q1)}
-${mode==='full'?`Shift 2 = ${rp(q2)}\n`:''}
-*Total = ${rp(totalQris)}*
+*(+) Penjualan Offline = ${rp(totalOffline)}*
 
-*(+) Pengeluaran*
-Ayam = ${ayam} Kg
-Beras = ${beras} Kg
+      Shift 1 = ${rp(jual1)}
+${mode==='full'?`      Shift 2 = ${rp(jual2)}\n`:''}
+*TRANSAKSI QRIS*
 
-*(-) Pengeluaran Shift 1*
+      Shift 1 = ${rp(q1)}
+${mode==='full'?`      Shift 2 = ${rp(q2)}\n`:''}
+      *Total Transaksi Qris = ${rp(totalQris)}*
+
+*(+) Pengeluaran Lainnya Lainnya*
+*PENGELUARAN AYAM : ${ayam} KG*
+
+*PENGELUARAN BERAS = ${beras} Kg*
+
+*(-) Pengeluaran Toko Shift 1*
 ${p1.text}
-*Total = ${rp(p1.total)}*
-
+*(=) Total Pengeluaran Toko Shift 1 = ${rp(p1.total)}*
 `;
 
 if(mode==='full'){
-text+=`*(-) Pengeluaran Shift 2*
+text += `
+*(-) Pengeluaran Toko Shift 2*
 ${p2.text}
-*Total = ${rp(p2.total)}*
+*(=) Total Pengeluaran Toko Shift 2 = ${rp(p2.total)}*
 
+*Total Pengeluaran Toko Shift 1 & 2 = ${rp(totalPengeluaran)}*
+_______________________________________________
 `;
 }
 
-text+=`*TOTAL PENGELUARAN = ${rp(totalPengeluaran)}*
-
-*(-) Uang Belanja*
-${rp(uang)}
+text += `
+ *(-) Uang Belanja*
+  
+*Total Transfer = ${rp(totalOffline)}*
+*Total Qris = ${rp(totalQris)}*
+*Total Transfer - Qris = ${rp(uang)}*
+  (Penjualan Offline - Belanja Shift 1 & 2)
 
 *SISA BUBUR*
-Shift 1 = ${sisa1}
-${mode==='full'?`Shift 2 = ${sisa2}\n`:''}
-*Total = ${sisa1+(mode==='full'?sisa2:0)}*
+Shift 1 = ${sisa1} Porsi
+${mode==='full'?`Shift 2 = ${sisa2} Porsi\n`:''}
+*Total Sisa = ${totalSisa} Porsi*
 `;
 
-document.getElementById("output").value=text;
+document.getElementById("output").value = text;
 }
-
 // ===== SAVE =====
 async function saveOnline(){
 let data={};
