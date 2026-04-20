@@ -109,43 +109,42 @@ function getPengeluaran(id){
   });
   return {total,text};
 }
-
-// ===== GENERATE =====
+// GENERATE  
 function generate(mode){
 
 let tanggal = document.getElementById("tanggal").value;
 
-// ===== SHIFT 1 =====
+// SHIFT 1
 let s1_off = sum("s1_offline");
 let s1_go = sum("s1_gojek");
 let s1_gr = sum("s1_grab");
 let s1_sh = sum("s1_shopee");
 let total1 = s1_off + s1_go + s1_gr + s1_sh;
 
-// ===== SHIFT 2 =====
+// SHIFT 2
 let s2_off = sum("s2_offline");
 let s2_go = sum("s2_gojek");
 let s2_gr = sum("s2_grab");
 let s2_sh = sum("s2_shopee");
 let total2 = s2_off + s2_go + s2_gr + s2_sh;
 
-// ===== PENJUALAN =====
+// PENJUALAN
 let jual1 = sum("jual1");
 let jual2 = sum("jual2");
 
-// ===== QRIS =====
+// QRIS
 let q1 = sum("qris1");
 let q2 = sum("qris2");
 
-// ===== STOK =====
-let ayam = document.getElementById("ayam").value || 0;
-let beras = document.getElementById("beras").value || 0;
+// STOK
+let ayam = document.getElementById("ayam").value || "";
+let beras = document.getElementById("beras").value || "";
 
-// ===== SISA =====
+// SISA
 let sisa1 = sum("sisa1");
 let sisa2 = sum("sisa2");
 
-// ===== PENGELUARAN =====
+// PENGELUARAN
 function ambil(id){
   let total = 0;
   let text = "";
@@ -166,7 +165,7 @@ function ambil(id){
 let p1 = ambil("pengeluaran1");
 let p2 = ambil("pengeluaran2");
 
-// ===== LOGIC UANG (INI YANG BENER) =====
+// HITUNGAN
 let totalOffline = jual1 + (mode==='full'?jual2:0);
 let totalPengeluaran = p1.total + (mode==='full'?p2.total:0);
 let totalQris = q1 + (mode==='full'?q2:0);
@@ -174,9 +173,9 @@ let totalQris = q1 + (mode==='full'?q2:0);
 let totalTransfer = totalOffline - totalPengeluaran;
 let sisaUang = totalTransfer - totalQris;
 
-// ===== OUTPUT =====
-let text = 
-`*SHIFT ${mode==='s1'?'1':'2'}*
+// OUTPUT
+let text =
+`*SHIFT 1*
 *LAPORAN HARIAN*
 *BUBUR AYAM KOBE*
 *${tanggal}*
@@ -187,67 +186,59 @@ Gojeg = ${s1_go} Porsi
 Grab = ${s1_gr} Porsi
 Shopee = ${s1_sh} Porsi
 *Total Porsi Terjual = ${total1} Porsi*
---------------------------------------------------------------------------------------------`;
-
-if(mode === 'full'){
-text += `
+-----------------------------------------------------------------
 *SHIFT 2*
-Offline = ${s2_off} Porsi
-Gojeg = ${s2_go} Porsi
-Grab = ${s2_gr} Porsi
-Shopee = ${s2_sh} Porsi
-*Total Porsi Terjual = ${total2} Porsi*
+Offline = ${mode==='full'?s2_off:''} Porsi
+Gojeg = ${mode==='full'?s2_go:''} Porsi
+Grab = ${mode==='full'?s2_gr:''} Porsi
+Shopee = ${mode==='full'?s2_sh:''} Porsi
+*Total Porsi Terjual = ${mode==='full'?total2:''} Porsi*
 
-*Total Porsi Terjual Shift 1 & 2 = ${total1+total2} Porsi*
--------------------------------------
-------------------------------------------------------`;
-}
-
-text += `
+*Total Porsi Terjual  Shift 1 & 2 = ${mode==='full'?total1+total2:total1} Porsi*
+-----------------------------------------------------------------
 
 *(+) Penjualan Offline = ${rp(totalOffline)}*
-
-      Shift 1 = ${rp(jual1)}
-${mode==='full'?`      Shift 2 = ${rp(jual2)}\n`:''}
+Shift 1 = ${rp(jual1)}
+Shift 2 = ${mode==='full'?rp(jual2):''}
+ 
 *TRANSAKSI QRIS*
-
-      Shift 1 = ${rp(q1)}
-${mode==='full'?`      Shift 2 = ${rp(q2)}\n`:''}
-      *Total Transaksi Qris = ${rp(totalQris)}*
+Shift 1 = ${rp(q1)}
+Shift 2 = ${mode==='full'?rp(q2):''}
+*Total Transaksi Qris = ${rp(totalQris)}*
 
 *(+) Pengeluaran Lainnya Lainnya*
 *PENGELUARAN AYAM : ${ayam} KG*
+Shift 1 = ${ayam} Kg
+Shift 2 = ${mode==='full'?ayam:''}
 
-*PENGELUARAN BERAS = ${beras} Kg*
+*PENGELUARAN BERAS = ${beras} KG*
+Shift 1 = ${beras} Kg
+Shift 2 = ${mode==='full'?beras:''}
 
 *(-) Pengeluaran Toko Shift 1*
 ${p1.text}
-*(=) Total Pengeluaran Toko Shift 1 = ${rp(p1.total)}*
-`;
 
-if(mode==='full'){
-text += `
+
+*(=) Total Pengeluaran Toko Shift 1 = ${rp(p1.total)}*
+
 *(-) Pengeluaran Toko Shift 2*
-${p2.text}
-*(=) Total Pengeluaran Toko Shift 2 = ${rp(p2.total)}*
+${mode==='full'?p2.text:''}
+*(=) Total Pengeluaran Toko Shift 2 =${mode==='full'?rp(p2.total):''}*
 
 *Total Pengeluaran Toko Shift 1 & 2 = ${rp(totalPengeluaran)}*
 _______________________________________________
-`;
-}
-
-text += `
+ 
  *(-) Uang Belanja*
   
 *Total Transfer = ${rp(totalTransfer)}*
 *Total Qris = ${rp(totalQris)}*
-*Total Transfer - Qris = ${rp(sisaUang)}*
+*Total Transfer - Qris =${rp(sisaUang)}*
   (Penjualan Offline - Belanja Shift 1 & 2)
 
 *SISA BUBUR*
 Shift 1 = ${sisa1} Porsi
-${mode==='full'?`Shift 2 = ${sisa2} Porsi\n`:''}
-*Total Sisa = ${sisa1 + (mode==='full'?sisa2:0)} Porsi*
+Shift 2 = ${mode==='full'?sisa2:''} Porsi
+*Total Sisa = ${mode==='full'?sisa1+sisa2:sisa1} Porsi*
 `;
 
 document.getElementById("output").value = text;
